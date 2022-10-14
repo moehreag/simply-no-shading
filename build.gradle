@@ -7,19 +7,19 @@ plugins {
 
 apply from: 'mods.gradle'
 
-javaVersion = 17 // Minecraft 1.18 (1.18-pre2) upwards uses Java 17.
+javaVersion = 8 // Minecraft 1.18 (1.18-pre2) upwards uses Java 17.
 loader = 'fabric'
-gameVersion = '1.18.2'
+gameVersion = '1.8.9'
 
 /******************/
 /** Dependencies **/
 /******************/
 
 repositories {
+	maven { url 'https://maven.legacyfabric.net/' }
 	maven { url 'https://api.modrinth.com/maven'; content { includeGroup 'maven.modrinth' } }
 	maven { url 'https://jitpack.io' }
 	maven { url 'https://maven.gegy.dev' }
-	maven { url 'https://maven.parchmentmc.org' }
 	maven { url 'https://maven.quiltmc.org/repository/release' }
 	maven { url 'https://maven.shedaniel.me' }
 	maven { url 'https://maven.terraformersmc.com' }
@@ -27,50 +27,33 @@ repositories {
 }
 
 dependencies {
-	// BedrockIfy
-	// modImplementation modrinth.latestDependency('bedrockify')
-	modCompileOnly modrinth.latestDependency('bedrockify')
-
-	// Enhanced Block Entities
-	modImplementation modrinth.latestDependency('ebe')
 	
 	// Fabric API
-	modRuntimeOnly modrinth.latestDependency('fabric-api')
-
-	// Fabric Key Binding API (V1)
-	modImplementation fabricApi.module('fabric-key-binding-api-v1')
-
-	// Fabric Lifecycle Events (V1)
-	modImplementation fabricApi.module('fabric-lifecycle-events-v1')
-
-	// Fabric Renderer API (V1)
-	modImplementation fabricApi.module('fabric-renderer-api-v1')
+	modImplementation "net.legacyfabric.legacy-fabric-api:legacy-fabric-api:1.8.0+1.8.9"
 
 	// Fabric Loader
 	modImplementation 'net.fabricmc:fabric-loader:latest.release'
 
-	// Iris
-	// modImplementation modrinth.latestDependency('iris')
-	modCompileOnly modrinth.latestDependency('iris')
-
-	// Layered Mappings
-	mappings loom.layered {
-		officialMojangMappings()
-		parchment parchment.latestDependency()
-	}
+	mappings libs.yarn
 
 	// Minecraft
 	minecraft "com.mojang:minecraft:$gameVersion"
 
-	// ModMenu
-	modImplementation modrinth.latestDependency('modmenu')
+	modImplementation include('com.github.AxolotlClient:AxolotlClient-config:e96bf64')
 
-	// Sodium
-	// modImplementation modrinth.latestDependency('sodium')
-	modCompileOnly modrinth.latestDependency('sodium')
+	implementation(include("it.unimi.dsi:fastutil:8.5.9"))
 
-	// SpruceUI
-	modImplementation include('dev.lambdaurora:spruceui:[3.3.3,4.0.0)')
+	modApi files("libs/legacy-modmenu-1.1.1-dev.jar")
+}
+
+// Fix netty with Java 17+ (be happy if it didn't break for you)
+configurations.all {
+	resolutionStrategy {
+		dependencySubstitution {
+			substitute module('io.netty:netty-all:4.0.23.Final') with module('io.netty:netty-all:4.0.25.Final')
+		}
+		force 'io.netty:netty-all:4.0.25.Final'
+	}
 }
 
 /************************/
@@ -109,14 +92,6 @@ targetCompatibility = javaVersion
 
 tasks.withType JavaCompile configureEach {
 	options.release = project.ext.javaVersion
-}
-
-/*****************/
-/** Fabric Loom **/
-/*****************/
-
-loom.runConfigs.configureEach {
-	vmArgs '-Dmixin.debug.export=true'
 }
 
 /****************/

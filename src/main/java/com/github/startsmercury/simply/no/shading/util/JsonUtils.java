@@ -22,8 +22,10 @@ public final class JsonUtils {
 	 * @see #asBoolean(JsonPrimitive, boolean)
 	 */
 	public static boolean asBoolean(final JsonElement element, final boolean defaultValue) {
-		return element instanceof final JsonPrimitive primitive ? asBooleanNonNull(primitive,
-		                                                                           defaultValue) : defaultValue;
+		if(element instanceof JsonPrimitive){
+			return asBooleanNonNull((JsonPrimitive) element, defaultValue);
+		}
+		return defaultValue;
 	}
 
 	/**
@@ -71,9 +73,11 @@ public final class JsonUtils {
 	 * @see #getBoolean(JsonObject, String, boolean)
 	 */
 	public static boolean getBoolean(final JsonElement element, final String name, final boolean defaultValue) {
-		return element instanceof final JsonObject object ? getBooleanNonNull(object,
-		                                                                      name,
-		                                                                      defaultValue) : defaultValue;
+		if(element instanceof JsonObject){
+			return getBooleanNonNull((JsonObject) element, name, defaultValue);
+		}
+
+		return defaultValue;
 	}
 
 	/**

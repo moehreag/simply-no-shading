@@ -83,7 +83,7 @@ For those without Fabric API:
 | Enhanced Block Entity Shading | Toggle | ON       | Controls enhanced block entity shading                                              |
 | Liquid Shading                | Toggle | OFF      | Controls liquid shading                                                             |
 
-### Advance Settings
+### Advanced Settings
 
 | Name                 | Type   | Defaults | Description                                             |
 | :------------------: | :----: | :------: | :------------------------------------------------------ |

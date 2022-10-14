@@ -1,9 +1,8 @@
 package com.github.startsmercury.simply.no.shading.util;
 
-import org.slf4j.Logger;
-
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
+import org.apache.logging.log4j.Logger;
 
 /**
  * Holds constants used elsewhere by the mod Simply No Shading.

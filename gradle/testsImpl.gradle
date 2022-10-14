@@ -22,7 +22,7 @@ tests.configure {
 	it.initialize()
 }
 
-loom.runConfigs.configureEach { property 'mixin.debug.export', 'true' }
+//loom.runConfigs.configureEach { property 'mixin.debug.export', 'true' }
 
 dependencies {
 	// Quiltflower

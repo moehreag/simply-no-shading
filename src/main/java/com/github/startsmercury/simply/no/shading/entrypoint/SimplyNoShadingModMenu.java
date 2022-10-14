@@ -1,8 +1,13 @@
 package com.github.startsmercury.simply.no.shading.entrypoint;
 
-import com.github.startsmercury.simply.no.shading.gui.SimplyNoShadingFabricSettingsScreen;
-import com.terraformersmc.modmenu.api.ConfigScreenFactory;
-import com.terraformersmc.modmenu.api.ModMenuApi;
+import io.github.axolotlclient.AxolotlclientConfig.AxolotlClientConfigManager;
+import io.github.axolotlclient.AxolotlclientConfig.options.OptionCategory;
+import io.github.axolotlclient.AxolotlclientConfig.screen.OptionsScreenBuilder;
+import io.github.prospector.modmenu.api.ModMenuApi;
+import net.minecraft.client.MinecraftClient;
+import net.minecraft.client.gui.screen.Screen;
+
+import java.util.function.Function;
 
 /**
  * Provides support for {@link ModMenuApi modmenu}. In {@code fabric.mod.json},
@@ -21,5 +26,15 @@ public class SimplyNoShadingModMenu implements ModMenuApi {
 	 * {@inheritDoc}
 	 */
 	@Override
-	public ConfigScreenFactory<?> getModConfigScreenFactory() { return SimplyNoShadingFabricSettingsScreen::new; }
+	public String getModId() {
+		return SimplyNoShadingClientMod.modid;
+	}
+
+	@Override
+	public Function<Screen, ? extends Screen> getConfigScreenFactory() {
+		return (parent) -> {
+			SimplyNoShadingClientMod.getInstance().openSettingsScreen(MinecraftClient.getInstance());
+			return MinecraftClient.getInstance().currentScreen;
+		};
+	}
 }

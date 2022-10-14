@@ -1,26 +1,22 @@
 package com.github.startsmercury.simply.no.shading.entrypoint;
 
-import static com.github.startsmercury.simply.no.shading.util.SimplyNoShadingConstants.LOGGER;
-import static net.fabricmc.api.EnvType.CLIENT;
+import com.github.startsmercury.simply.no.shading.config.SimplyNoShadingConfig;
+import com.github.startsmercury.simply.no.shading.util.SimplyNoShadingKeyManager;
+import io.github.axolotlclient.AxolotlclientConfig.AxolotlClientConfigManager;
+import net.fabricmc.api.ClientModInitializer;
+import net.fabricmc.api.Environment;
+import net.fabricmc.loader.api.FabricLoader;
+import net.legacyfabric.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
+import net.minecraft.client.MinecraftClient;
+import net.minecraft.client.gui.screen.Screen;
 
 import java.util.Objects;
 import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Supplier;
 
-import com.github.startsmercury.simply.no.shading.config.FabricShadingRules;
-import com.github.startsmercury.simply.no.shading.config.SimplyNoShadingFabricClientConfig;
-import com.github.startsmercury.simply.no.shading.gui.SimplyNoShadingFabricSettingsScreen;
-import com.github.startsmercury.simply.no.shading.util.SimplyNoShadingFabricKeyManager;
-
-import net.fabricmc.api.ClientModInitializer;
-import net.fabricmc.api.Environment;
-import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientLifecycleEvents;
-import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
-import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents.EndTick;
-import net.fabricmc.loader.api.FabricLoader;
-import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.screens.Screen;
+import static com.github.startsmercury.simply.no.shading.util.SimplyNoShadingConstants.LOGGER;
+import static net.fabricmc.api.EnvType.CLIENT;
 
 /**
  * Simply No Shading {@link ClientModInitializer fabric client mod initializer}.
@@ -29,12 +25,13 @@ import net.minecraft.client.gui.screens.Screen;
  */
 @Environment(CLIENT)
 public class SimplyNoShadingFabricClientMod extends
-        SimplyNoShadingClientMod<SimplyNoShadingFabricClientConfig<FabricShadingRules>, SimplyNoShadingFabricKeyManager>
+        SimplyNoShadingClientMod<SimplyNoShadingKeyManager>
         implements ClientModInitializer {
 	/**
 	 * The instance of this class.
 	 */
 	private static SimplyNoShadingFabricClientMod instance;
+
 
 	/**
 	 * Returns the instance of this class if there is one initialized, throws an
@@ -71,7 +68,7 @@ public class SimplyNoShadingFabricClientMod extends
 	 * @param whenInitialized the action ran when initialized
 	 * @since 5.0.0
 	 */
-	public static void whenInitialized(final Consumer<? super SimplyNoShadingClientMod<?, ?>> whenInitialized) {
+	public static void whenInitialized(final Consumer<? super SimplyNoShadingClientMod<?>> whenInitialized) {
 		Objects.requireNonNull(whenInitialized);
 
 		if (isInitialized()) { whenInitialized.accept(instance); }
@@ -87,7 +84,7 @@ public class SimplyNoShadingFabricClientMod extends
 	 * @return the result of one of the given actions
 	 * @since 5.0.0
 	 */
-	public static <T> T whenInitialized(final Function<? super SimplyNoShadingClientMod<?, ?>, ? extends T> whenInitialized,
+	public static <T> T whenInitialized(final Function<? super SimplyNoShadingClientMod<?>, ? extends T> whenInitialized,
 	                                    final Supplier<? extends T> whenUninitialized) {
 		Objects.requireNonNull(whenInitialized);
 		Objects.requireNonNull(whenUninitialized);
@@ -99,9 +96,7 @@ public class SimplyNoShadingFabricClientMod extends
 	 * Creates a new instance of {@code SimplyNoShadingFabricClientMod}.
 	 */
 	public SimplyNoShadingFabricClientMod() {
-		super(new SimplyNoShadingFabricClientConfig<>(new FabricShadingRules()),
-		      FabricLoader.getInstance().getConfigDir().resolve("simply-no-shading+client.json"),
-		      SimplyNoShadingFabricKeyManager::new);
+		super(new SimplyNoShadingConfig(), FabricLoader.getInstance().getConfigDir().resolve("simply-no-shading+client.json"));
 	}
 
 	/**
@@ -109,7 +104,8 @@ public class SimplyNoShadingFabricClientMod extends
 	 */
 	@Override
 	public Screen createSettingsScreen(final Screen parent) {
-		return new SimplyNoShadingFabricSettingsScreen(parent, this.config);
+		AxolotlClientConfigManager.openConfigScreen(modid);
+		return MinecraftClient.getInstance().currentScreen;
 	}
 
 	/**
@@ -123,6 +119,8 @@ public class SimplyNoShadingFabricClientMod extends
 		registerLifecycleEventListeners();
 
 		instance = this;
+		AxolotlClientConfigManager.registerConfig(modid, config);
+		AxolotlClientConfigManager.save(modid);
 
 		LOGGER.info("Initialized mod");
 	}
@@ -132,14 +130,6 @@ public class SimplyNoShadingFabricClientMod extends
 	 */
 	protected void registerKeyMappings() {
 		LOGGER.debug("Registering key mappings...");
-
-		final var fabricLoader = FabricLoader.getInstance();
-
-		if (!fabricLoader.isModLoaded("fabric-key-binding-api-v1")) {
-			LOGGER.warn("Unable to register key mappings as the mod provided by 'fabric' (specifically 'fabric-key-binding-api-v1') is not present");
-
-			return;
-		}
 
 		this.keyManager.register();
 
@@ -152,58 +142,9 @@ public class SimplyNoShadingFabricClientMod extends
 	protected void registerLifecycleEventListeners() {
 		LOGGER.debug("Registering life cycle event listeners...");
 
-		// Redundant, this is embedded in spruceui
-		if (!FabricLoader.getInstance().isModLoaded("fabric-lifecycle-events-v1")) {
-			LOGGER.warn("Unable to register life cycle event listeners as the mod provided by 'fabric' (specifically 'fabric-lifecycle-events-v1') is not present");
-
-			registerShutdownHook();
-
-			return;
-		}
-
-		ClientTickEvents.END_CLIENT_TICK.register(new EndTick() {
-			private boolean windowWasActive;
-
-			@Override
-			public void onEndTick(final Minecraft client) {
-				final var windowActive = client.isWindowActive();
-
-				if (this.windowWasActive == windowActive)
-					return;
-
-				if (windowActive) {
-					loadConfig();
-				} else {
-					saveConfig();
-				}
-
-				this.windowWasActive = windowActive;
-			}
-		});
 		ClientTickEvents.END_CLIENT_TICK.register(client -> {
-			final var openSettings = this.keyManager.openSettings.consumeClick();
-
-			if (openSettings) { openSettingsScreen(client); }
-
-			final var observation = !openSettings ? this.config.observe() : null;
-			final var toggled = toggleShade(this.keyManager.toggleAllShading, this.config.shadingRules.all)
-			        | toggleShade(this.keyManager.toggleBlockShading, this.config.shadingRules.blocks)
-			        | toggleShade(this.keyManager.toggleCloudShading, this.config.shadingRules.clouds)
-			        | toggleShade(this.keyManager.toggleEnhancedBlockEntityShading,
-			                      this.config.shadingRules.enhancedBlockEntities)
-			        | toggleShade(this.keyManager.toggleLiquidShading, this.config.shadingRules.liquids);
-
-			if (!toggled || openSettings)
-				return;
-
-			observation.react(client);
-
-			if (!this.config.smartReloadMessage || !observation.smartlyRebuiltChunks() || client.player == null)
-				return;
-
-			client.player.displayClientMessage(SMART_RELOAD_COMPONENT, true);
+			keyManager.tick();
 		});
-		ClientLifecycleEvents.CLIENT_STOPPING.register(client -> saveConfig());
 
 		LOGGER.info("Registered life cycle event listeners");
 	}

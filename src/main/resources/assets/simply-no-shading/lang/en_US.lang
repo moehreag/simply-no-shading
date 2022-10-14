@@ -1,0 +1,18 @@
+
+simply-no-shadingConfig=Simply No Shading
+shadingRules=Shading Rules
+advanced=Advanced Options
+all=All
+blocks=Blocks
+liquids=Liquids
+clouds=Clouds
+smartReload=Smart Reload
+smartReloadMessage=Smart Reload Message
+smartReload.tooltip=This option has currently no function. Sorry!
+smartReloadMessage.tooltip=This option has currently no function. Sorry!
+
+simply-no-shading.key.categories.simply-no-shading=Simply No Shading
+simply-no-shading.key.openSettings=Open Settings
+simply-no-shading.key.toggleAllShading=Toggle All Shading
+simply-no-shading.key.toggleBlockShading=Toggle Block Shading
+simply-no-shading.key.toggleCloudShading=Toggle Cloud Shading

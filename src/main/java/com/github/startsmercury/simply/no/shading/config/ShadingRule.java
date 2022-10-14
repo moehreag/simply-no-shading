@@ -95,8 +95,8 @@ public class ShadingRule implements Copyable<ShadingRule> {
 	public boolean equals(final Object obj) {
 		if (this == obj)
 			return true;
-		else if (obj instanceof final ShadingRule other)
-			return equals(other);
+		else if (obj instanceof ShadingRule)
+			return ((ShadingRule) obj).shade == shade;
 		else
 			return false;
 	}
@@ -222,8 +222,8 @@ public class ShadingRule implements Copyable<ShadingRule> {
 	 * @since 5.0.0
 	 */
 	public boolean wouldShade() {
-		final var parent = getParent();
-		final var wouldParentShade = parent != null && parent.wouldShade();
+		final ShadingRule parent = getParent();
+		final boolean wouldParentShade = parent != null && parent.wouldShade();
 
 		return wouldParentShade || shouldShade();
 	}

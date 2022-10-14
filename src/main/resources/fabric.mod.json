@@ -15,7 +15,8 @@
 	],
 	"contributors": [
 		"IMS212",
-		"PepperCode1"
+		"PepperCode1",
+		"moehreag"
 	],
 	"contact": {
 		"homepage": "https://modrinth.com/mod/simply-no-shading",
@@ -36,12 +37,12 @@
 		]
 	},
 	"mixins": [
-		"simply-no-shading+fabric.mixins.json"
+		"simply-no-shading.mixins.json"
 	],
 
 	"depends": {
 		"fabricloader": "*",
-		"java": ">=17",
+		"java": ">=8",
 		"minecraft": "*"
 	},
 	"recommends": {

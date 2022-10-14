@@ -90,8 +90,8 @@ public abstract class MultiValuedContainer<T> implements Iterable<Entry<String, 
 	public boolean equals(final Object obj) {
 		if (this == obj)
 			return true;
-		else if (obj instanceof final MultiValuedContainer<?> other)
-			return this.values.equals(other.values);
+		else if (obj instanceof MultiValuedContainer<?>)
+			return this.values.equals(((MultiValuedContainer<?>) obj).values);
 		else
 			return false;
 	}

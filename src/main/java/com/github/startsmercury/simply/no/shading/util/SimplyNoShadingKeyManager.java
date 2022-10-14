@@ -1,13 +1,18 @@
 package com.github.startsmercury.simply.no.shading.util;
 
-import static net.fabricmc.api.EnvType.CLIENT;
-
-import com.github.startsmercury.simply.no.shading.config.SimplyNoShadingClientConfig;
-import com.mojang.blaze3d.platform.InputConstants;
-
+import com.github.startsmercury.simply.no.shading.config.SimplyNoShadingConfig;
+import com.github.startsmercury.simply.no.shading.entrypoint.SimplyNoShadingClientMod;
+import com.github.startsmercury.simply.no.shading.entrypoint.SimplyNoShadingFabricClientMod;
 import net.fabricmc.api.Environment;
-import net.minecraft.client.KeyMapping;
-import net.minecraft.client.ToggleKeyMapping;
+import net.legacyfabric.fabric.api.client.keybinding.v1.KeyBindingHelper;
+import net.minecraft.client.MinecraftClient;
+import net.minecraft.client.options.KeyBinding;
+import org.lwjgl.input.Keyboard;
+
+import java.util.ArrayList;
+import java.util.List;
+
+import static net.fabricmc.api.EnvType.CLIENT;
 
 /**
  * The {@code SimplyNoShadingKeyManager} class represents the key manager of the
@@ -16,7 +21,10 @@ import net.minecraft.client.ToggleKeyMapping;
  * @since 5.0.0
  */
 @Environment(CLIENT)
-public class SimplyNoShadingKeyManager extends MultiValuedContainer<KeyMapping> {
+public class SimplyNoShadingKeyManager {
+
+	private final List<ActionKeyBinding> keyBindings = new ArrayList<>();
+
 	/**
 	 * Simply No Shading key category.
 	 */
@@ -25,58 +33,59 @@ public class SimplyNoShadingKeyManager extends MultiValuedContainer<KeyMapping> 
 	/**
 	 * Open settings key mapping.
 	 */
-	public final KeyMapping openSettings;
+	public final ActionKeyBinding openSettings;
 
 	/**
-	 * Toggle all shading key mapping.
+	 * toggle all shading key mapping.
 	 */
-	public final ToggleKeyMapping toggleAllShading;
+	public final ActionKeyBinding toggleAllShading;
 
 	/**
-	 * Toggle block shading key mapping.
+	 * toggle block shading key mapping.
 	 */
-	public final ToggleKeyMapping toggleBlockShading;
+	public final ActionKeyBinding toggleBlockShading;
 
 	/**
-	 * Toggle cloud shading key mapping.
+	 * toggle cloud shading key mapping.
 	 */
-	public final ToggleKeyMapping toggleCloudShading;
+	public final ActionKeyBinding toggleCloudShading;
 
 	/**
-	 * Toggle liquid shading key mapping.
+	 * toggle liquid shading key mapping.
 	 */
-	public final ToggleKeyMapping toggleLiquidShading;
+	public final ActionKeyBinding toggleLiquidShading;
 
 	/**
 	 * Create a key manager from a given config.
 	 *
 	 * @param config the config
 	 */
-	protected SimplyNoShadingKeyManager(final SimplyNoShadingClientConfig<?> config) {
+	public SimplyNoShadingKeyManager(final SimplyNoShadingConfig config) {
 		this.openSettings = register("openSettings",
-		                             new KeyMapping("simply-no-shading.key.openSettings",
-		                                            InputConstants.UNKNOWN.getValue(),
-		                                            CATEGORY));
+		                             new ActionKeyBinding("simply-no-shading.key.openSettings",
+											 Keyboard.KEY_NONE,
+		                                            CATEGORY,
+											 ()-> SimplyNoShadingFabricClientMod.getInstance().openSettingsScreen(MinecraftClient.getInstance())));
 		this.toggleAllShading = register("toggleAllShading",
-		                                 new ToggleKeyMapping("simply-no-shading.key.toggleAllShading",
-		                                                      InputConstants.KEY_F6,
+		                                 new ActionKeyBinding("simply-no-shading.key.toggleAllShading",
+												 Keyboard.KEY_F6,
 		                                                      CATEGORY,
-		                                                      config.shadingRules.all::shouldShade));
+												 ()->SimplyNoShadingClientMod.getInstance().config.all.toggle()));
 		this.toggleBlockShading = register("toggleBlockShading",
-		                                   new ToggleKeyMapping("simply-no-shading.key.toggleBlockShading",
-		                                                        InputConstants.UNKNOWN.getValue(),
+		                                   new ActionKeyBinding("simply-no-shading.key.toggleBlockShading",
+												   Keyboard.KEY_NONE,
 		                                                        CATEGORY,
-		                                                        config.shadingRules.blocks::shouldShade));
+												   ()->SimplyNoShadingClientMod.getInstance().config.blocks.toggle()));
 		this.toggleCloudShading = register("toggleCloudShading",
-		                                   new ToggleKeyMapping("simply-no-shading.key.toggleCloudShading",
-		                                                        InputConstants.UNKNOWN.getValue(),
+		                                   new ActionKeyBinding("simply-no-shading.key.toggleCloudShading",
+												   Keyboard.KEY_NONE,
 		                                                        CATEGORY,
-		                                                        config.shadingRules.clouds::shouldShade));
+												   ()->SimplyNoShadingClientMod.getInstance().config.clouds.toggle()));
 		this.toggleLiquidShading = register("toggleLiquidShading",
-		                                    new ToggleKeyMapping("simply-no-shading.key.toggleLiquidShading",
-		                                                         InputConstants.UNKNOWN.getValue(),
+		                                    new ActionKeyBinding("simply-no-shading.key.toggleLiquidShading",
+													Keyboard.KEY_NONE,
 		                                                         CATEGORY,
-		                                                         config.shadingRules.liquids::shouldShade));
+													()->SimplyNoShadingClientMod.getInstance().config.liquids.toggle()));
 	}
 
 	/**
@@ -85,25 +94,28 @@ public class SimplyNoShadingKeyManager extends MultiValuedContainer<KeyMapping> 
 	 * @since 5.0.0
 	 */
 	public void register() {
-		forEach((name, keyMapping) -> { if (shouldRegister(name, keyMapping)) { register(keyMapping); } });
+		keyBindings.forEach(this::register);
+	}
+
+	private ActionKeyBinding register(String name, ActionKeyBinding keyBinding){
+		keyBindings.add(keyBinding);
+		return keyBinding;
 	}
 
 	/**
 	 * Registers a key mapping.
 	 *
-	 * @param keyMapping the key mapping
+	 * @param KeyBinding the key mapping
 	 */
-	protected void register(final KeyMapping keyMapping) {}
+	protected void register(final KeyBinding KeyBinding) {
+		KeyBindingHelper.registerKeyBinding(KeyBinding);
+	}
 
-	/**
-	 * Filters which key mapping should be applied given the name and the key
-	 * mapping.
-	 *
-	 * @param name       the name
-	 * @param keyMapping the key mapping
-	 * @return a {@code boolean} value
-	 */
-	protected boolean shouldRegister(final String name, final KeyMapping keyMapping) {
-		return true;
+	public void tick(){
+		keyBindings.forEach(keyBinding -> {
+			if (keyBinding.wasPressed()) {
+				keyBinding.action.onPress();
+			}
+		});
 	}
 }

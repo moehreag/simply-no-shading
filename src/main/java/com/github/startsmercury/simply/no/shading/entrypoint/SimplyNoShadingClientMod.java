@@ -1,56 +1,47 @@
 package com.github.startsmercury.simply.no.shading.entrypoint;
 
-import static com.github.startsmercury.simply.no.shading.util.SimplyNoShadingConstants.GSON;
-import static com.github.startsmercury.simply.no.shading.util.SimplyNoShadingConstants.LOGGER;
-import static java.nio.file.Files.newBufferedReader;
-import static java.nio.file.Files.newBufferedWriter;
-import static net.fabricmc.api.EnvType.CLIENT;
+import com.github.startsmercury.simply.no.shading.config.ShadingRule;
+import com.github.startsmercury.simply.no.shading.config.SimplyNoShadingConfig;
+import com.github.startsmercury.simply.no.shading.util.SimplyNoShadingKeyManager;
+import io.github.axolotlclient.AxolotlclientConfig.AxolotlClientConfigManager;
+import net.fabricmc.api.Environment;
+import net.minecraft.client.MinecraftClient;
+import net.minecraft.client.gui.screen.Screen;
+import net.minecraft.client.options.KeyBinding;
 
-import java.io.IOException;
-import java.lang.reflect.Type;
-import java.nio.file.NoSuchFileException;
 import java.nio.file.Path;
 import java.util.Objects;
 import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Supplier;
 
-import com.github.startsmercury.simply.no.shading.config.ShadingRule;
-import com.github.startsmercury.simply.no.shading.config.ShadingRules;
-import com.github.startsmercury.simply.no.shading.config.SimplyNoShadingClientConfig;
-import com.github.startsmercury.simply.no.shading.gui.ShadingSettingsScreen;
-import com.github.startsmercury.simply.no.shading.util.SimplyNoShadingKeyManager;
-import com.google.gson.JsonObject;
-import com.google.gson.JsonSyntaxException;
-import com.google.gson.internal.Streams;
-import com.google.gson.reflect.TypeToken;
-
-import net.fabricmc.api.Environment;
-import net.minecraft.client.KeyMapping;
-import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.screens.Screen;
-import net.minecraft.network.chat.TranslatableComponent;
+import static com.github.startsmercury.simply.no.shading.util.SimplyNoShadingConstants.LOGGER;
+import static net.fabricmc.api.EnvType.CLIENT;
 
 /**
  * The base mod class of Simply No Shading.
  *
- * @param <C> The config type
  * @param <K> The key manager type
  * @since 5.0.0
  */
 @Environment(CLIENT)
-public abstract class SimplyNoShadingClientMod<C extends SimplyNoShadingClientConfig<? extends ShadingRules>, K extends SimplyNoShadingKeyManager> {
+public abstract class SimplyNoShadingClientMod<K extends SimplyNoShadingKeyManager> {
 	/**
 	 * The instance of this class.
 	 */
-	private static SimplyNoShadingClientMod<?, ?> instance;
+	private static SimplyNoShadingClientMod<?> instance;
+	public static final String modid = "simply-no-shading";
+
+	protected SimplyNoShadingKeyManager keyManager;
+
+	public SimplyNoShadingConfig config;
 
 	/**
 	 * The message shown in-game to the player when a smart reload was performed.
 	 *
 	 * @since 5.0.0
 	 */
-	public static final TranslatableComponent SMART_RELOAD_COMPONENT = new TranslatableComponent("simply-no-shading.option.shadingRules.smartReload");
+	//public static Text SMART_RELOAD_COMPONENT;
 
 	/**
 	 * Returns the instance of this class if there is one initialized, throws an
@@ -63,7 +54,7 @@ public abstract class SimplyNoShadingClientMod<C extends SimplyNoShadingClientCo
 	 * @since 5.0.0
 	 * @see #isInitialized()
 	 */
-	public static SimplyNoShadingClientMod<?, ?> getInstance() {
+	public static SimplyNoShadingClientMod<?> getInstance() {
 		if (isInitialized())
 			throw new IllegalStateException("Accessed too early!");
 
@@ -89,8 +80,8 @@ public abstract class SimplyNoShadingClientMod<C extends SimplyNoShadingClientCo
 	 * @return {@code true} if the given shading rule was toggled for the given key
 	 *         mapping being pressed
 	 */
-	protected static boolean toggleShade(final KeyMapping keyMapping, final ShadingRule shadingRule) {
-		if (keyMapping.consumeClick()) {
+	protected static boolean toggleShade(final KeyBinding keyMapping, final ShadingRule shadingRule) {
+		if (keyMapping.isPressed()) {
 			shadingRule.toggleShade();
 
 			return true;
@@ -105,7 +96,7 @@ public abstract class SimplyNoShadingClientMod<C extends SimplyNoShadingClientCo
 	 * @param whenInitialized the action ran when initialized
 	 * @since 5.0.0
 	 */
-	public static void whenInitialized(final Consumer<? super SimplyNoShadingClientMod<?, ?>> whenInitialized) {
+	public static void whenInitialized(final Consumer<? super SimplyNoShadingClientMod<?>> whenInitialized) {
 		Objects.requireNonNull(whenInitialized);
 
 		if (isInitialized()) { whenInitialized.accept(instance); }
@@ -121,20 +112,13 @@ public abstract class SimplyNoShadingClientMod<C extends SimplyNoShadingClientCo
 	 * @return the result of one of the given actions
 	 * @since 5.0.0
 	 */
-	public static <T> T whenInitialized(final Function<? super SimplyNoShadingClientMod<?, ?>, ? extends T> whenInitialized,
+	public static <T> T whenInitialized(final Function<? super SimplyNoShadingClientMod<?>, ? extends T> whenInitialized,
 	                                    final Supplier<? extends T> whenUninitialized) {
 		Objects.requireNonNull(whenInitialized);
 		Objects.requireNonNull(whenUninitialized);
 
 		return isInitialized() ? whenInitialized.apply(instance) : whenUninitialized.get();
 	}
-
-	/**
-	 * The config.
-	 *
-	 * @since 5.0.0
-	 */
-	public final C config;
 
 	/**
 	 * The config path.
@@ -144,51 +128,19 @@ public abstract class SimplyNoShadingClientMod<C extends SimplyNoShadingClientCo
 	public final Path configPath;
 
 	/**
-	 * The key manager.
-	 *
-	 * @since 5.0.0
-	 */
-	public final K keyManager;
-
-	/**
 	 * Creates a new instance of SimplyNoShadingClientMod.
 	 *
-	 * @param config             the config
-	 * @param configPath         the config path
-	 * @param keyManagerProvider the key manager provider
 	 */
-	protected SimplyNoShadingClientMod(final C config,
-	                                   final Path configPath,
-	                                   final Function<? super C, ? extends K> keyManagerProvider) {
-		this.config = config;
+	protected SimplyNoShadingClientMod(SimplyNoShadingConfig config, final Path configPath) {
 		this.configPath = configPath;
-		this.keyManager = keyManagerProvider.apply(this.config);
 
-		loadConfig();
+		//loadConfig();
+		this.config = config;
 
 		instance = this;
-	}
+		this.keyManager = new SimplyNoShadingKeyManager(config);
 
-	/**
-	 * Creates the config, writing it to disk.
-	 *
-	 * @see #loadConfig()
-	 * @since 5.0.0
-	 */
-	public void createConfig() {
-		LOGGER.debug("Creating config...");
-
-		final var configJson = new JsonObject();
-
-		this.config.write(configJson);
-
-		try (final var buffer = newBufferedWriter(this.configPath); final var out = GSON.newJsonWriter(buffer)) {
-			Streams.write(configJson, out);
-
-			LOGGER.info("Created config");
-		} catch (final IOException ioe) {
-			LOGGER.warn("Unable to create config", ioe);
-		}
+		//SMART_RELOAD_COMPONENT = new LiteralText(I18n.translate("simply-no-shading.option.shadingRules.smartReload"));
 	}
 
 	/**
@@ -198,10 +150,10 @@ public abstract class SimplyNoShadingClientMod<C extends SimplyNoShadingClientCo
 	 * @return the settings screen
 	 * @see #createSettingsScreen(Screen)
 	 */
-	private Screen createSettingsScreen(final Minecraft client) {
+	private Screen createSettingsScreen(final MinecraftClient client) {
 		LOGGER.debug("Creating settings screen...");
 
-		final var settingsScreen = createSettingsScreen(client.screen);
+		final Screen settingsScreen = createSettingsScreen(client.currentScreen);
 
 		LOGGER.info("Created settings screen");
 		return settingsScreen;
@@ -214,16 +166,8 @@ public abstract class SimplyNoShadingClientMod<C extends SimplyNoShadingClientCo
 	 * @return the settings screen
 	 */
 	public Screen createSettingsScreen(final Screen parent) {
-		return new ShadingSettingsScreen(parent, this.config);
+		return null;
 	}
-
-	/**
-	 * Returns the config.
-	 *
-	 * @return the config
-	 * @since 5.0.0
-	 */
-	public C getConfig() { return this.config; }
 
 	/**
 	 * Returns the config path.
@@ -234,48 +178,14 @@ public abstract class SimplyNoShadingClientMod<C extends SimplyNoShadingClientCo
 	public Path getConfigPath() { return this.configPath; }
 
 	/**
-	 * Returns the config type.
+	 * Loads the config from disk, it will create a new one
+	 * if it is absent.
 	 *
-	 * @return the config type
-	 */
-	protected Type getConfigType() {
-		return TypeToken.getParameterized(this.config.getClass(), this.config.shadingRules.getClass()).getType();
-	}
-
-	/**
-	 * Returns the key manager.
-	 *
-	 * @return the key manager
-	 * @since 5.0.0
-	 */
-	public K getKeyManager() { return this.keyManager; }
-
-	/**
-	 * Loads the config from disk, it will {@link #createConfig() create} a new one
-	 * if its absent.
-	 *
-	 * @see #createConfig()
 	 * @see #saveConfig()
 	 * @since 5.0.0
 	 */
 	public void loadConfig() {
-		try (final var buffer = newBufferedReader(this.configPath); var in = GSON.newJsonReader(buffer)) {
-			LOGGER.debug("Loading config...");
-
-			this.config.read(Streams.parse(in));
-
-			LOGGER.info("Loaded config");
-		} catch (final NoSuchFileException nsfe) {
-			createConfig();
-		} catch (final IOException ioe) {
-			LOGGER.debug("Loading config...");
-
-			LOGGER.warn("Unable to load config", ioe);
-		} catch (final JsonSyntaxException jse) {
-			LOGGER.warn("Malformed json", jse);
-
-			saveConfig();
-		}
+		AxolotlClientConfigManager.load(modid);
 	}
 
 	/**
@@ -284,29 +194,10 @@ public abstract class SimplyNoShadingClientMod<C extends SimplyNoShadingClientCo
 	 * @param client the client
 	 * @see #createSettingsScreen(Screen)
 	 */
-	protected void openSettingsScreen(final Minecraft client) {
+	public void openSettingsScreen(final MinecraftClient client) {
 		LOGGER.debug("Opening settings screen...");
 
-		if (!(client.screen instanceof ShadingSettingsScreen)) {
-			final var settingsScreen = createSettingsScreen(client);
-
-			client.setScreen(settingsScreen);
-
-			LOGGER.info("Opened settings screen");
-		} else {
-			LOGGER.warn("Unable to open settings screen as it's already open!");
-		}
-	}
-
-	/**
-	 * Registers a shutdown hook to run {@link #saveConfig()}.
-	 */
-	protected void registerShutdownHook() {
-		LOGGER.debug("Registering shutdown hook...");
-
-		Runtime.getRuntime().addShutdownHook(new Thread(this::saveConfig));
-
-		LOGGER.info("Registered shutdown hook");
+		AxolotlClientConfigManager.openConfigScreen(modid);
 	}
 
 	/**
@@ -318,23 +209,6 @@ public abstract class SimplyNoShadingClientMod<C extends SimplyNoShadingClientCo
 	public void saveConfig() {
 		LOGGER.debug("Saving config...");
 
-		final JsonObject configJson;
-
-		try (final var reader = newBufferedReader(this.configPath); var in = GSON.newJsonReader(reader)) {
-			configJson = Streams.parse(in) instanceof final JsonObject object ? object : new JsonObject();
-		} catch (final IOException ioe) {
-			LOGGER.warn("Unable to save config", ioe);
-			return;
-		}
-
-		this.config.write(configJson);
-
-		try (final var writer = newBufferedWriter(this.configPath); final var out = GSON.newJsonWriter(writer)) {
-			Streams.write(configJson, out);
-
-			LOGGER.info("Saved config");
-		} catch (final IOException ioe) {
-			LOGGER.warn("Unable to save config", ioe);
-		}
+		AxolotlClientConfigManager.save(modid);
 	}
 }

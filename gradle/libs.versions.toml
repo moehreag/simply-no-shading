@@ -12,11 +12,11 @@ lazydfu = "0.1.2"
 loom-quiltflower = "latest.release"
 minecraft = "1.18.2"
 modmenu = "3.2.+"
-parchment = "2022.08.21"
+yarn = "1.8.9+build.410"
 quiltflower = "latest.release"
 sodium = "mc1.18.2-0.4.1"
 sodium-include-joml = "1.10.2"
-spruceui = "[3.3.3,4.0.0)"
+axolotlclientconfig = "9453a1495a"
 
 [libraries]
 bedrockify = { module = "maven.modrinth:bedrockify", version.ref = "bedrockify" }
@@ -35,7 +35,8 @@ modmenu = { module = "com.terraformersmc:modmenu", version.ref = "modmenu" }
 quiltflower = { module = "org.quiltmc:quiltflower", version.ref = "quiltflower" }
 sodium = { module = "maven.modrinth:sodium", version.ref = "sodium" }
 sodium-include-joml = { module = "org.joml:joml", version.ref = "sodium-include-joml" }
-spruceui = { module = "dev.lambdaurora:spruceui", version.ref = "spruceui" }
+yarn = { module = "net.legacyfabric:yarn", version.ref = "yarn" }
+axolotlclientconfig = { module = "com.github.AxolotlClient:AxolotlClient-config", version.ref = "axolotlclientconfig" }
 
 [plugins]
 fabric-loom = { id = "fabric-loom", version.ref = "fabric-loom" }

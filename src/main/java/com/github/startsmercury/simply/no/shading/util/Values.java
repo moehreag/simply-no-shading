@@ -19,7 +19,7 @@ import it.unimi.dsi.fastutil.objects.Object2ReferenceSortedMaps;
  * @param <T> the element type
  * @since 5.0.0
  */
-@Deprecated(forRemoval = true)
+@Deprecated
 public class Values<T> implements Iterable<Entry<String, T>> {
 	/**
 	 * The values.
@@ -88,8 +88,8 @@ public class Values<T> implements Iterable<Entry<String, T>> {
 	public boolean equals(final Object obj) {
 		if (this == obj)
 			return true;
-		else if (obj instanceof final Values<?> other)
-			return this.values.equals(other.values);
+		else if (obj instanceof Values<?>)
+			return this.values.equals(((Values<?>) obj).values);
 		else
 			return false;
 	}

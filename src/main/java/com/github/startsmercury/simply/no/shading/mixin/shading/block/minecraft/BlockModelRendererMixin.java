@@ -8,6 +8,10 @@ import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Redirect;
 
+/**
+ * Changes the light of blocks because there is no shading here.
+ */
+
 @Mixin(BlockModelRenderer.class)
 public abstract class BlockModelRendererMixin {
 

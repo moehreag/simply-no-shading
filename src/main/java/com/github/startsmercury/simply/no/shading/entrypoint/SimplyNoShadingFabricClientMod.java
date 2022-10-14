@@ -96,7 +96,7 @@ public class SimplyNoShadingFabricClientMod extends
 	 * Creates a new instance of {@code SimplyNoShadingFabricClientMod}.
 	 */
 	public SimplyNoShadingFabricClientMod() {
-		super(new SimplyNoShadingConfig(), FabricLoader.getInstance().getConfigDir().resolve("simply-no-shading+client.json"));
+		super(new SimplyNoShadingConfig());
 	}
 
 	/**

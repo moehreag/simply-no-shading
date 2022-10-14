@@ -111,6 +111,9 @@ public class SimplyNoShadingKeyManager {
 		KeyBindingHelper.registerKeyBinding(KeyBinding);
 	}
 
+	/**
+	 * Check whether an action should be executed.
+	 */
 	public void tick(){
 		keyBindings.forEach(keyBinding -> {
 			if (keyBinding.wasPressed()) {

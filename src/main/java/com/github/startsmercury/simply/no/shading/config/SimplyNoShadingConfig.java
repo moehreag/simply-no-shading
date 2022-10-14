@@ -11,18 +11,50 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+/**
+ * The config class of SimplyNoShading on 1.8.9
+ */
+
 public class SimplyNoShadingConfig extends ConfigHolder {
 
+    /**
+     * A map storing a relation between an option and a shading rule.
+     */
     public Map<BooleanOption, ShadingRule> rules = new HashMap<>();
+
+    /**
+     * whether a rebuilt has been considered smart.
+     */
     private boolean smartlyRebuiltChunks;
 
+    /**
+     * The Category storing the options for the Rules
+     */
     public final OptionCategory shadingRules = new OptionCategory("shadingRules");
+
+    /**
+     * The Category storing the options for rebuilding
+     */
     public final OptionCategory advancedOptions = new OptionCategory("advanced");
 
-
+    /**
+     * Whether shading should be enabled on blocks
+     */
     public final BooleanOption blocks = new BooleanOption("blocks", this::updateShadeBlocks, false);
+
+    /**
+     * Whether shading should be enabled on clouds
+     */
     public final BooleanOption clouds = new BooleanOption("clouds", this::updateShadeClouds, true);
+
+    /**
+     * Whether shading should be enabled on liquids
+     */
     public final BooleanOption liquids = new BooleanOption("liquids", this::updateShadeLiquids, false);
+
+    /**
+     * An option to toggle all other ones together at the same time
+     */
     public final BooleanOption all = new BooleanOption("all", value -> {
         blocks.set(value);
         clouds.set(value);
@@ -30,11 +62,24 @@ public class SimplyNoShadingConfig extends ConfigHolder {
         updateShadeAll(value);
     }, false);
 
+    /**
+     * Whether smart Reloading is enabled
+     */
     public final BooleanOption smartReload = new BooleanOption("smartReload", true);
+
+    /**
+     * Whether a message should be sent to the player when a smart reload occurs
+     */
     public final BooleanOption smartReloadMessage = new BooleanOption("smartReloadMessage", true);
 
+    /**
+     * The list storing the categories
+     */
     List<OptionCategory> list = new ArrayList<>();
 
+    /**
+     * Constructs the config
+     */
     public SimplyNoShadingConfig(){
         shadingRules.add(all, blocks, clouds, liquids);
         advancedOptions.add(smartReload, smartReloadMessage);
@@ -47,6 +92,10 @@ public class SimplyNoShadingConfig extends ConfigHolder {
         rules.put(liquids, new ShadingRule(rules.get(all), false));
     }
 
+    /**
+     * Get a list of all categories for this config
+     * @return the list of all categories
+     */
     @Override
     public List<OptionCategory> getCategories() {
         return list;
@@ -71,15 +120,11 @@ public class SimplyNoShadingConfig extends ConfigHolder {
         rebuildClouds(MinecraftClient.getInstance(), smartReload.get());
     }
 
-    public ShadingRule getRule(BooleanOption option){
-        return rules.get(option);
-    }
-
-    protected void rebuildChunks(){
+    private void rebuildChunks(){
         this.smartlyRebuiltChunks = !rebuildChunks(MinecraftClient.getInstance(), smartReload.get()) && smartReload.get();
     }
 
-    protected boolean rebuildChunks(final MinecraftClient client, final boolean smartReload) {
+    private boolean rebuildChunks(final MinecraftClient client, final boolean smartReload) {
         return rebuildBlocks(client, smartReload) | rebuildClouds(client, smartReload);
     }
 
@@ -118,10 +163,12 @@ public class SimplyNoShadingConfig extends ConfigHolder {
         return this.smartlyRebuiltChunks;
     }
 
-    protected boolean rebuildBlocks(final MinecraftClient client, final boolean smartReload) {
+    private boolean rebuildBlocks(final MinecraftClient client, final boolean smartReload) {
         if (!smartReload || shouldRebuild() && client.worldRenderer != null) {
             client.worldRenderer.reload();
             return true;
-        } else return false;
+        } else {
+            return false;
+        }
     }
 }

@@ -8,6 +8,7 @@ import net.fabricmc.api.Environment;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.client.options.KeyBinding;
+import net.minecraft.text.Text;
 
 import java.nio.file.Path;
 import java.util.Objects;
@@ -30,10 +31,20 @@ public abstract class SimplyNoShadingClientMod<K extends SimplyNoShadingKeyManag
 	 * The instance of this class.
 	 */
 	private static SimplyNoShadingClientMod<?> instance;
+
+	/**
+	 * This mod's modid. Used for config management
+	 */
 	public static final String modid = "simply-no-shading";
 
+	/**
+	 * The KeyManager, managing KeyBinds.
+	 */
 	protected SimplyNoShadingKeyManager keyManager;
 
+	/**
+	 * The config of this mod.
+	 */
 	public SimplyNoShadingConfig config;
 
 	/**
@@ -41,7 +52,7 @@ public abstract class SimplyNoShadingClientMod<K extends SimplyNoShadingKeyManag
 	 *
 	 * @since 5.0.0
 	 */
-	//public static Text SMART_RELOAD_COMPONENT;
+	public static Text SMART_RELOAD_COMPONENT;
 
 	/**
 	 * Returns the instance of this class if there is one initialized, throws an
@@ -121,18 +132,10 @@ public abstract class SimplyNoShadingClientMod<K extends SimplyNoShadingKeyManag
 	}
 
 	/**
-	 * The config path.
-	 *
-	 * @since 5.0.0
-	 */
-	public final Path configPath;
-
-	/**
 	 * Creates a new instance of SimplyNoShadingClientMod.
-	 *
+	 * @param config an instance of the config
 	 */
-	protected SimplyNoShadingClientMod(SimplyNoShadingConfig config, final Path configPath) {
-		this.configPath = configPath;
+	protected SimplyNoShadingClientMod(SimplyNoShadingConfig config) {
 
 		//loadConfig();
 		this.config = config;
@@ -170,25 +173,6 @@ public abstract class SimplyNoShadingClientMod<K extends SimplyNoShadingKeyManag
 	}
 
 	/**
-	 * Returns the config path.
-	 *
-	 * @return the config path
-	 * @since 5.0.0
-	 */
-	public Path getConfigPath() { return this.configPath; }
-
-	/**
-	 * Loads the config from disk, it will create a new one
-	 * if it is absent.
-	 *
-	 * @see #saveConfig()
-	 * @since 5.0.0
-	 */
-	public void loadConfig() {
-		AxolotlClientConfigManager.load(modid);
-	}
-
-	/**
 	 * Opens the settings screen.
 	 *
 	 * @param client the client
@@ -198,17 +182,5 @@ public abstract class SimplyNoShadingClientMod<K extends SimplyNoShadingKeyManag
 		LOGGER.debug("Opening settings screen...");
 
 		AxolotlClientConfigManager.openConfigScreen(modid);
-	}
-
-	/**
-	 * Saves the config, writing it to disk.
-	 *
-	 * @see #loadConfig()
-	 * @since 5.0.0
-	 */
-	public void saveConfig() {
-		LOGGER.debug("Saving config...");
-
-		AxolotlClientConfigManager.save(modid);
 	}
 }

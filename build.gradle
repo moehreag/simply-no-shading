@@ -18,7 +18,7 @@ gameVersion = '1.8.9'
 repositories {
 	maven { url 'https://maven.legacyfabric.net/' }
 	maven { url 'https://api.modrinth.com/maven'; content { includeGroup 'maven.modrinth' } }
-	maven { url 'https://jitpack.io' }
+	maven { url "https://moehreag.duckdns.org/maven/snapshots" }
 	maven { url 'https://maven.gegy.dev' }
 	maven { url 'https://maven.quiltmc.org/repository/release' }
 	maven { url 'https://maven.shedaniel.me' }
@@ -39,7 +39,7 @@ dependencies {
 	// Minecraft
 	minecraft "com.mojang:minecraft:$gameVersion"
 
-	modImplementation include('com.github.AxolotlClient:AxolotlClient-config:e96bf64')
+	modImplementation include('io.github.axolotlclient:AxolotlClient-config:1.0.12-beta.1+1.8.9')
 
 	implementation(include("it.unimi.dsi:fastutil:8.5.9"))
 
